@@ -1,0 +1,74 @@
+version: "3.7"
+
+volumes:
+  db-data:
+  wordpress-files:
+
+services:
+  mysql-db:
+    image: mysql:5.7.25
+    labels:
+      com.example.description: "MySQL Database"
+      com.example.department: "DevOps Team"
+    hostname: mysql-db
+    container_name: mysql-db
+    privileged: false
+    ports:
+      - "3306:3306/tcp"
+    volumes:
+      - db-data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpass
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  nginx:
+    build: ./nginx
+    image: nginx
+    depends_on:
+      - mysql-db
+      - wordpress
+    labels:
+      com.example.description: "NGINX"
+      com.example.department: "DevOps Team"
+    hostname: nginx
+    container_name: nginx
+    privileged: false
+    ports:
+      - "443:443/tcp"
+      - "80:80/tcp"
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  wordpress:
+    image: wordpress:5.1.1-php7.1-apache
+    depends_on:
+      - mysql-db
+    labels:
+      com.example.description: "WordPress"
+      com.example.department: "DevOps Team"
+    restart: always
+    hostname: wordpress
+    container_name: wordpress
+    privileged: false
+    volumes:
+      - wordpress-files:/files
+    environment:
+      WORDPRESS_DB_HOST: mysql-db
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpass
+      WORDPRESS_DB_NAME: wordpress
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

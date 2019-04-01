@@ -29,6 +29,7 @@
 
 #### TLS
 * Port 80 FWDing to port 443
+* No LetsEncrypt since I need a domain name for LE to do the checking
 * DH Enable (2048 bits)
 
 ```
